@@ -1,0 +1,3 @@
+[submodule "OwlTree"]
+	path = OwlTree
+	url = https://github.com/CaptainToTo/owl-tree.git
