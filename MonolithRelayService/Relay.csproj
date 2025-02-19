@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../OwlTree/Framework/OwlTree/OwlTree.csproj" />
-    <ProjectReference Include="../OwlTree/Framework/OwlTree.Generator/OwlTree.Generator.csproj" OutputItemType="analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="../OwlTree/OwlTree/OwlTree.csproj" />
+    <ProjectReference Include="../OwlTree/OwlTree.Generator/OwlTree.Generator.csproj" OutputItemType="analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="../Matchmaking/OwlTree.Matchmaking.csproj" />
   </ItemGroup>
 </Project>
