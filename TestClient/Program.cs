@@ -67,7 +67,7 @@ public static class Program
         while (client.IsActive)
         {
             client.ExecuteQueue();
-            Thread.Sleep(5);
+            Thread.Sleep(client.TickRate);
         }
 
         client.Disconnect();
@@ -149,7 +149,7 @@ public static class Program
         while (client.IsActive)
         {
             client.ExecuteQueue();
-            Thread.Sleep(5);
+            Thread.Sleep(client.TickRate);
         }
 
         client.Disconnect();
