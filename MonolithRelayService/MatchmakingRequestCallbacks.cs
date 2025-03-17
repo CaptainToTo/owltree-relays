@@ -53,7 +53,7 @@ public static class MatchmakingRequestCallbacks
                     else
                         File.AppendAllTextAsync(bandwidthFile, $"send {lastOutgoing.bytes} @ {lastOutgoing.time}\n");
                 },
-                logger = (str) => File.AppendAllTextAsync(logFile, str),
+                logger = (str) => File.AppendAllText(logFile, str),
                 verbosity = Logger.Includes().All()
             });
 
