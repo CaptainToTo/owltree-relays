@@ -54,7 +54,14 @@ public static class MatchmakingRequestCallbacks
                         File.AppendAllTextAsync(bandwidthFile, $"send {lastOutgoing.bytes} @ {lastOutgoing.time}\n");
                 },
                 logger = (str) => File.AppendAllText(logFile, str),
-                verbosity = Logger.Includes().All()
+                verbosity = Logger.Includes()
+                    .LogSeparators()
+                    .LogTimestamp()
+                    .ClientEvents()
+                    .ConnectionAttempts()
+                    .Exceptions()
+                    .RpcCalls()
+                    .RpcReceives()
             });
 
             connection.OnClientConnected += (id) => File.AppendAllTextAsync(clientsFile, $"connected {id.Id} @ {DateTimeOffset.Now.ToUnixTimeSeconds()}\n");
