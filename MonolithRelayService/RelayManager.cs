@@ -26,6 +26,25 @@ public class RelayManager
     public int Count => _connections.Count;
 
     /// <summary>
+    /// The number of sessions that have ended, but whose log files still exist.
+    /// </summary>
+    public int ClosedCount => _closed.Count;
+
+    private ConcurrentDictionary<string, SessionDetails> _closed = new();
+
+    public IEnumerable<SessionDetails> ClosedConnections => _closed.Values;
+
+    public SessionDetails GetClosed(string sessionId)
+    {
+        return _closed.GetValueOrDefault(sessionId);
+    }
+
+    public void RemovedClosed(string sessionId)
+    {
+        _closed.Remove(sessionId, out var data);
+    }
+
+    /// <summary>
     /// Iterable of all currently active relays.
     /// </summary>
     public IEnumerable<Connection> Connections => _connections.Values;
@@ -87,6 +106,16 @@ public class RelayManager
                     _connections[sessionId].Disconnect();
                 _connections.Remove(sessionId, out var connection);
                 _startTimes.Remove(sessionId, out var time);
+                _closed.TryAdd(sessionId, new SessionDetails{
+                    sessionId = sessionId,
+                    appId = connection.AppId,
+                    ipAddr = Program.ip,
+                    tcpPort = 0,
+                    udpPort = 0,
+                    clientCount = 0,
+                    maxClients = connection.MaxClients,
+                    authority = 0
+                });
             }
             toBeRemoved.Clear();
             long diff = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - start;

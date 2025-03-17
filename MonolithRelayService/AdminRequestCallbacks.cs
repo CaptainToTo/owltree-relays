@@ -5,7 +5,7 @@ public static class AdminRequestCallbacks
         var relay = Program.relays.Get(sessionId);
 
         if (relay == null)
-            return SessionDetailsResponse.NotFound;
+            return HandleClosedSessionRequest(sessionId);
         
         var response = new SessionDetailsResponse{
             sessionId = relay.SessionId.Id,
@@ -16,7 +16,7 @@ public static class AdminRequestCallbacks
             authority = relay.Authority.Id,
             maxClients = relay.MaxClients,
             clients = new ClientData[relay.ClientCount],
-            logs = File.ReadAllText($"logs/relay{relay.SessionId.Id}.log")
+            logs = File.ReadAllText($"logs/relay-{relay.SessionId.Id}.log")
         };
 
         var clients = relay.Clients.ToArray();
@@ -29,7 +29,7 @@ public static class AdminRequestCallbacks
             response.clients[i].ping = ping.Ping;
         }
 
-        var clientEvents = File.ReadAllText($"logs/relay{relay.SessionId.Id}-clients.log").Split('\n');
+        var clientEvents = File.ReadAllText($"logs/relay-{relay.SessionId.Id}-clients.log").Split('\n');
         response.clientEvents = new ClientEvent[clientEvents.Length - 1];
         for (int i = 0; i < clientEvents.Length - 1; i++)
         {
@@ -46,7 +46,70 @@ public static class AdminRequestCallbacks
             response.clientEvents[i].timestamp = long.Parse(tokens[3]);
         }
 
-        var bandwidthGroups = File.ReadLines($"logs/relay{relay.SessionId.Id}-bandwidth.log")
+        var bandwidthGroups = File.ReadLines($"logs/relay-{relay.SessionId.Id}-bandwidth.log")
+            .Select(l => {
+                var tokens = l.Split(' ');
+                return (tokens[0] == "send", int.Parse(tokens[1]), long.Parse(tokens[3]));
+            })
+            .GroupBy(a => a.Item3 / 1000);
+        var recv = new List<int>();
+        var send = new List<int>();
+
+        foreach (var group in bandwidthGroups)
+        {
+            int sent = group.Where(a => a.Item1).Sum(a => a.Item2);
+            int received = group.Where(a => !a.Item1).Sum(a => a.Item2);
+
+            send.Add(sent);
+            recv.Add(received);
+        }
+
+        response.bandwidth = new BandwidthData{
+            send = send.ToArray(),
+            recv = recv.ToArray()
+        };
+
+        response.responseCode = AdminResponseCodes.RelayDetailsSuccess;
+
+        return response;
+    }
+
+    public static SessionDetailsResponse HandleClosedSessionRequest(string sessionId)
+    {
+        var details = Program.relays.GetClosed(sessionId);
+        if (details.sessionId != sessionId)
+            return SessionDetailsResponse.NotFound;
+        
+        var response = new SessionDetailsResponse{
+            sessionId = details.sessionId,
+            appId = details.appId,
+            ipAddr = Program.ip,
+            tcpPort = details.tcpPort,
+            udpPort = details.udpPort,
+            authority = details.authority,
+            maxClients = details.maxClients,
+            clients = new ClientData[details.clientCount],
+            logs = File.ReadAllText($"logs/relay-{details.sessionId}.log")
+        };
+
+        var clientEvents = File.ReadAllText($"logs/relay-{details.sessionId}-clients.log").Split('\n');
+        response.clientEvents = new ClientEvent[clientEvents.Length - 1];
+        for (int i = 0; i < clientEvents.Length - 1; i++)
+        {
+            var tokens = clientEvents[i].Split(' ');
+
+            if (tokens[0] == "connected")
+                response.clientEvents[i].eventType = ClientEventType.ClientConnection;
+            else if (tokens[0] == "disconnected")
+                response.clientEvents[i].eventType = ClientEventType.ClientDisconnection;
+            else if (tokens[0] == "migrated")
+                response.clientEvents[i].eventType = ClientEventType.HostMigration;
+            
+            response.clientEvents[i].clientId = uint.Parse(tokens[1]);
+            response.clientEvents[i].timestamp = long.Parse(tokens[3]);
+        }
+
+        var bandwidthGroups = File.ReadLines($"logs/relay-{details.sessionId}-bandwidth.log")
             .Select(l => {
                 var tokens = l.Split(' ');
                 return (tokens[0] == "send", int.Parse(tokens[1]), long.Parse(tokens[3]));
@@ -77,7 +140,7 @@ public static class AdminRequestCallbacks
     public static SessionListResponse HandleSessionListRequest()
     {
         var response = new SessionListResponse{
-            sessions = new SessionDetails[Program.relays.Count]
+            sessions = new SessionDetails[Program.relays.Count + Program.relays.ClosedCount]
         };
 
         int i = 0;
@@ -91,6 +154,11 @@ public static class AdminRequestCallbacks
             response.sessions[i].maxClients = relay.MaxClients;
             response.sessions[i].ipAddr = Program.ip;
             response.sessions[i].authority = relay.Authority.Id;
+            i++;
+        }
+        foreach (var closed in Program.relays.ClosedConnections)
+        {
+            response.sessions[i] = closed;
             i++;
         }
 

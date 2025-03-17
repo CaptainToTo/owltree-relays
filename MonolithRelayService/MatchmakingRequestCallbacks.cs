@@ -69,6 +69,7 @@ public static class MatchmakingRequestCallbacks
                     File.Delete(bandwidthFile);
                 if (File.Exists(clientsFile))
                     File.Delete(clientsFile);
+                Program.relays.RemovedClosed(request.sessionId);
             };
 
             connection.Log($"New Relay: {connection.SessionId} for App {connection.AppId}\nTCP: {connection.LocalTcpPort}\nUDP: {connection.LocalUdpPort}\nRequested Host: {client}");
