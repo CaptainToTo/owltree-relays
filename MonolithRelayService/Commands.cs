@@ -50,6 +50,7 @@ public static class Commands
         while (!ping.Resolved)
         {
             relay.ExecuteQueue();
+            Thread.Sleep(10);
         }
 
         if (ping.Failed)
