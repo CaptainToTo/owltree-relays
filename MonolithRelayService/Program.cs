@@ -45,7 +45,7 @@ public static class Program
         var admin = new AdminEndpoint(adminDomain, password);
         admin.OnSessionListRequest = AdminRequestCallbacks.HandleSessionListRequest;
         admin.OnSessionDetailsRequest = AdminRequestCallbacks.HandleSessionDetailsRequest;
-        relays = new RelayManager();
+        relays = new RelayManager(100);
 
         admin.Start();
         endpoint.Start();

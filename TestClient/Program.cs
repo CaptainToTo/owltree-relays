@@ -49,6 +49,10 @@ public static class Program
             Console.WriteLine($"client {id} connected");
         };
 
+        client.OnClientDisconnected += (id) => {
+            Console.WriteLine($"client {id} disconnected");
+        };
+
         client.OnHostMigration += (id) => {
             if (client.IsHost)
                 Console.WriteLine("you are now the host");
@@ -85,7 +89,9 @@ public static class Program
             maxClients = 6,
             migratable = true,
             owlTreeVersion = 1,
-            appVersion = 1
+            appVersion = 1,
+            simulationSystem = SimulationSystemRequest.Rollback,
+            simulationTickRate = 40
         });
 
         while (!promise.IsCompleted)
@@ -110,7 +116,9 @@ public static class Program
             appId = response.appId,
             sessionId = response.sessionId,
             logger = (str) => File.AppendAllText(logFile, str),
-            verbosity = Logger.Includes().All()
+            verbosity = Logger.Includes().All(),
+            simulationSystem = (SimulationSystem)response.simulationSystem,
+            simulationTickRate = response.simulationTickRate
         });
 
         client.OnReady += (id) => {
@@ -121,6 +129,10 @@ public static class Program
 
         client.OnClientConnected += (id) => {
             Console.WriteLine($"client {id} connected");
+        };
+
+        client.OnClientDisconnected += (id) => {
+            Console.WriteLine($"client {id} disconnected");
         };
 
         client.OnHostMigration += (id) => {

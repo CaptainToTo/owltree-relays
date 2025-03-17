@@ -16,6 +16,11 @@ public class RelayManager
     public int Capacity { get; private set; }
 
     /// <summary>
+    /// Returns true if the relay manager is at capacity.
+    /// </summary>
+    public bool IsFull => Capacity == Count;
+
+    /// <summary>
     /// the number of relays currently active.
     /// </summary>
     public int Count => _connections.Count;

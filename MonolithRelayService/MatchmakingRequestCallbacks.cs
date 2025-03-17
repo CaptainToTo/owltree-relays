@@ -15,17 +15,17 @@ public static class MatchmakingRequestCallbacks
         // create a new relay if the the session id hasn't been taken yet
         if (!Program.relays.Contains(request.sessionId))
         {
-            if (request.clientRole != ClientRole.Host)
+            if (request.clientRole != ClientRole.Host || Program.relays.IsFull)
                 return MatchmakingResponse.RequestRejected;
 
             // log file matching the session id
-            var logFile = $"logs/relay{request.sessionId}.log";
+            var logFile = $"logs/relay-{request.sessionId}.log";
             File.WriteAllText(logFile, "");
 
-            var clientsFile = $"logs/relay{request.sessionId}-clients.log";
+            var clientsFile = $"logs/relay-{request.sessionId}-clients.log";
             File.WriteAllText(clientsFile, "");
 
-            var bandwidthFile = $"logs/relay{request.sessionId}-bandwidth.log";
+            var bandwidthFile = $"logs/relay-{request.sessionId}-bandwidth.log";
             File.WriteAllText(bandwidthFile, "");
 
             connection = Program.relays.Add(new Connection.Args{
@@ -33,6 +33,8 @@ public static class MatchmakingRequestCallbacks
                 sessionId = request.sessionId,
                 role = NetRole.Relay,
                 serverAddr = Program.ip,
+                simulationSystem = (SimulationSystem)request.simulationSystem,
+                simulationTickRate = request.simulationTickRate,
                 tcpPort = 0,
                 udpPort = 0,
                 hostAddr = client.ToString(),
@@ -88,7 +90,9 @@ public static class MatchmakingRequestCallbacks
             tcpPort = connection.ServerTcpPort,
             sessionId = request.sessionId,
             appId = request.appId,
-            serverType = ServerType.Relay
+            serverType = ServerType.Relay,
+            simulationSystem = (SimulationSystemRequest)connection.SimulationSystem,
+            simulationTickRate = connection.TickRate
         };
     }
 }
