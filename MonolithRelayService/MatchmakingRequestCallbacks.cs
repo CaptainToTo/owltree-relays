@@ -59,7 +59,7 @@ public static class MatchmakingRequestCallbacks
                     .LogTimestamp()
                     .ClientEvents()
                     .ConnectionAttempts()
-                    .Exceptions()
+                    // .Exceptions()
                     .RpcCalls()
                     .RpcReceives()
             });
