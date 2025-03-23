@@ -62,6 +62,7 @@ public static class MatchmakingRequestCallbacks
                     .Exceptions()
                     .RpcCalls()
                     .RpcReceives()
+                    .TcpPreTransform()
             });
 
             connection.OnClientConnected += (id) => File.AppendAllTextAsync(clientsFile, $"connected {id.Id} @ {DateTimeOffset.Now.ToUnixTimeSeconds()}\n");
