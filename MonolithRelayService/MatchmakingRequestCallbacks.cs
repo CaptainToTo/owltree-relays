@@ -70,8 +70,6 @@ public static class MatchmakingRequestCallbacks
             connection.OnHostMigration += (id) => File.AppendAllTextAsync(clientsFile, $"migrated {id.Id} @ {DateTimeOffset.Now.ToUnixTimeSeconds()}\n");
 
             connection.OnLocalDisconnect += (id) => {
-                if (File.Exists(logFile))
-                    File.Delete(logFile);
                 if (File.Exists(bandwidthFile))
                     File.Delete(bandwidthFile);
                 if (File.Exists(clientsFile))
