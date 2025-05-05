@@ -9,6 +9,7 @@ public static class Program
         var sessionId = args.Length > 1 ? args[1] : "MyAppSession";
         var tcpPort = args.Length > 2 ? int.Parse(args[2]) : 8000;
         var udpPort = args.Length > 3 ? int.Parse(args[3]) : 9000;
+        var updateDelta = args.Length > 4 ? int.Parse(args[4]) : 40;
 
         var rand = new Random();
         var logId = rand.Next();
@@ -25,6 +26,7 @@ public static class Program
             sessionId = sessionId,
             tcpPort = tcpPort,
             udpPort = udpPort,
+            threadUpdateDelta = updateDelta,
             migratable = true,
             shutdownWhenEmpty = false,
             maxClients = 10,
