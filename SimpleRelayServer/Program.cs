@@ -4,6 +4,12 @@ public static class Program
 {
     public static void Main(string[] args)
     {
+        if (args.Length == 1 && (args[0] == "h" || args[0] == "help"))
+        {
+            Console.WriteLine("usage: dotnet run [AppId] [SessionId] [TCP] [UDP] [ThreadDelta]");
+            return;
+        }
+
 
         var appId = args.Length > 0 ? args[0] : "MyOwlTreeApp";
         var sessionId = args.Length > 1 ? args[1] : "MyAppSession";
