@@ -6,7 +6,7 @@ public static class Program
     {
         if (args.Length == 1 && (args[0] == "h" || args[0] == "help"))
         {
-            Console.WriteLine("usage: dotnet run [AppId] [SessionId] [TCP] [UDP] [ThreadDelta]");
+            Console.WriteLine("usage: dotnet run [AppId] [SessionId] [TCP] [UDP] [ThreadDelta] [m/l/r/s]");
             return;
         }
 
@@ -16,6 +16,25 @@ public static class Program
         var tcpPort = args.Length > 2 ? int.Parse(args[2]) : 8000;
         var udpPort = args.Length > 3 ? int.Parse(args[3]) : 9000;
         var updateDelta = args.Length > 4 ? int.Parse(args[4]) : 20;
+        var simSystemOption = args.Length > 5 ? args[5] : "n";
+
+        SimulationSystem simSystem = SimulationSystem.None;
+        switch (simSystemOption)
+        {
+            case "l":
+                simSystem = SimulationSystem.Lockstep;
+                break;
+            case "r":
+                simSystem = SimulationSystem.Rollback;
+                break;
+            case "s":
+                simSystem = SimulationSystem.Snapshot;
+                break;
+            case "n":
+            default:
+                simSystem = SimulationSystem.None;
+                break;
+        }
 
         var rand = new Random();
         var logId = rand.Next();
@@ -33,6 +52,7 @@ public static class Program
             tcpPort = tcpPort,
             udpPort = udpPort,
             threadUpdateDelta = updateDelta,
+            simulationSystem = simSystem,
             migratable = true,
             shutdownWhenEmpty = false,
             maxClients = 10,
