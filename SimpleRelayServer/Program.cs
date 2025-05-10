@@ -16,7 +16,7 @@ public static class Program
         var tcpPort = args.Length > 2 ? int.Parse(args[2]) : 8000;
         var udpPort = args.Length > 3 ? int.Parse(args[3]) : 9000;
         var updateDelta = args.Length > 4 ? int.Parse(args[4]) : 20;
-        var simSystemOption = args.Length > 5 ? args[5] : "n";
+        var simSystemOption = args.Length > 5 ? args[5] : "m";
 
         SimulationSystem simSystem = SimulationSystem.None;
         switch (simSystemOption)
@@ -30,7 +30,7 @@ public static class Program
             case "s":
                 simSystem = SimulationSystem.Snapshot;
                 break;
-            case "n":
+            case "m":
             default:
                 simSystem = SimulationSystem.None;
                 break;
