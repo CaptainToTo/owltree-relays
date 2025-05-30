@@ -1,6 +1,3 @@
 [submodule "OwlTree"]
 	path = OwlTree
 	url = https://github.com/CaptainToTo/owl-tree.git
-[submodule "Matchmaking"]
-	path = Matchmaking
-	url = https://github.com/CaptainToTo/owltree-matchmaking.git
