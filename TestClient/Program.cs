@@ -1,7 +1,7 @@
 ﻿using OwlTree;
 using OwlTree.Matchmaking;
 
-/// Example test client to use test relay service
+/// Example test client to test relay service
 
 public static class Program
 {
@@ -73,53 +73,81 @@ public static class Program
         client.Disconnect();
     }
 
-    private static void UseMatchmaking(string[] args)
+    private static async void UseMatchmaking(string[] args)
     {
         var rand = new Random();
         var logId = (rand.Next() % 900) + 100;
         var logFile = $"logs/client{logId}.log";
         Console.WriteLine("client log id: " + logId.ToString());
 
-        var request = new MatchmakingClient(args[1]);
-        var promise = request.MakeRequest(new MatchmakingRequest{
-            appId = args[0],
-            sessionId = args.Length == 4 ? args[3] : logId.ToString(),
-            serverType = ServerType.Relay,
-            clientRole = args[2] == "host" ? ClientRole.Host : ClientRole.Client,
-            maxClients = 6,
-            migratable = true,
-            owlTreeVersion = 1,
-            appVersion = 1,
-            simulationSystem = SimulationSystemRequest.Rollback,
-            simulationTickRate = 40
-        });
+        var apiClient = new MatchmakingClient(args[1]);
 
-        while (!promise.IsCompleted)
-            Thread.Sleep(50);
-        
-        if (promise.IsFaulted)
-            return;
-        
-        var response = promise.Result;
+        Connection client = null;
 
-        if (response.RequestFailed)
+        if (args[2] == "host")
         {
-            Console.WriteLine("failed to request relay server");
-            Environment.Exit(0);
-        }
+            var response = await apiClient.CreateSession(new SessionCreationRequest
+            {
+                appId = args[0],
+                sessionId = logId.ToString(),
+                maxClients = 6,
+                migratable = false,
+                simulationSystem = SimulationSystem.None,
+                tickRate = 20
+            });
 
-        var client = new Connection(new Connection.Args{
-            role = NetRole.Client,
-            serverAddr = response.serverAddr,
-            tcpPort = response.tcpPort,
-            udpPort = response.udpPort,
-            appId = response.appId,
-            sessionId = response.sessionId,
-            logger = (str) => File.AppendAllText(logFile, str),
-            verbosity = Logger.Includes().All(),
-            simulationSystem = (SimulationSystem)response.simulationSystem,
-            simulationTickRate = response.simulationTickRate
-        });
+            if (response.RequestFailed)
+            {
+                Console.WriteLine("failed to request relay server");
+                Environment.Exit(0);
+            }
+
+            client = new Connection(new Connection.Args
+            {
+                role = NetRole.Host,
+                serverAddr = response.serverAddr,
+                tcpPort = response.tcpPort,
+                udpPort = response.udpPort,
+                appId = args[0],
+                sessionId = logId.ToString(),
+                maxClients = 6,
+                migratable = false,
+                simulationSystem = SimulationSystem.None,
+                simulationTickRate = 20,
+                logger = (str) => File.AppendAllText(logFile, str),
+                verbosity = Logger.Includes().All()
+            });
+        }
+        else
+        {
+            var response = await apiClient.GetSession(new SessionDataRequest
+            {
+                appId = args[0],
+                sessionId = args[3]
+            });
+
+            if (response.RequestFailed)
+            {
+                Console.WriteLine("failed to request relay server");
+                Environment.Exit(0);
+            }
+
+            client = new Connection(new Connection.Args
+            {
+                role = NetRole.Client,
+                serverAddr = response.serverAddr,
+                tcpPort = response.tcpPort,
+                udpPort = response.udpPort,
+                appId = args[0],
+                sessionId = args[3],
+                maxClients = response.maxClients,
+                migratable = response.migratable,
+                simulationSystem = response.simulationSystem,
+                simulationTickRate = response.tickRate,
+                logger = (str) => File.AppendAllText(logFile, str),
+                verbosity = Logger.Includes().All()
+            });
+        }
 
         client.OnReady += (id) => {
             if (client.IsHost)

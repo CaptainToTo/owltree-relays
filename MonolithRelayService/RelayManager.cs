@@ -26,25 +26,6 @@ public class RelayManager
     public int Count => _connections.Count;
 
     /// <summary>
-    /// The number of sessions that have ended, but whose log files still exist.
-    /// </summary>
-    public int ClosedCount => _closed.Count;
-
-    private ConcurrentDictionary<string, SessionDetails> _closed = new();
-
-    public IEnumerable<SessionDetails> ClosedConnections => _closed.Values;
-
-    public SessionDetails GetClosed(string sessionId)
-    {
-        return _closed.GetValueOrDefault(sessionId);
-    }
-
-    public void RemovedClosed(string sessionId)
-    {
-        _closed.Remove(sessionId, out var data);
-    }
-
-    /// <summary>
     /// Iterable of all currently active relays.
     /// </summary>
     public IEnumerable<Connection> Connections => _connections.Values;
@@ -106,16 +87,6 @@ public class RelayManager
                     _connections[sessionId].Disconnect();
                 _connections.Remove(sessionId, out var connection);
                 _startTimes.Remove(sessionId, out var time);
-                _closed.TryAdd(sessionId, new SessionDetails{
-                    sessionId = sessionId,
-                    appId = connection.AppId,
-                    ipAddr = Program.ip,
-                    tcpPort = 0,
-                    udpPort = 0,
-                    clientCount = 0,
-                    maxClients = connection.MaxClients,
-                    authority = 0
-                });
             }
             toBeRemoved.Clear();
             long diff = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - start;
@@ -133,6 +104,10 @@ public class RelayManager
         _startTimes.Clear();
     }
 
+    public static string GetKey(Connection.Args args) => args.appId + "+" + args.sessionId;
+    public static string GetKey(Connection relay) => relay.AppId + "+" + relay.SessionId;
+    public static string GetKey(string appId, string sessionId) => appId + "+" + sessionId;
+
     /// <summary>
     /// Create a new relay connection with the given args.
     /// Returns the created relay.
@@ -141,34 +116,42 @@ public class RelayManager
     {
         if (_connections.Count >= Capacity)
             throw new InvalidOperationException("Cannot create more connections, manager is at capacity.");
-        
-        if (_connections.ContainsKey(args.sessionId))
+
+        if (_connections.ContainsKey(GetKey(args)))
             throw new ArgumentException($"'{args.sessionId}' already exists.");
-        
+
         var connection = new Connection(args);
 
-        if (!_connections.TryAdd(args.sessionId, connection))
+        if (!_connections.TryAdd(GetKey(args), connection))
         {
             connection.Disconnect();
             throw new InvalidOperationException("Failed to cache new connection.");
         }
         _startTimes.TryAdd(args.sessionId, DateTimeOffset.Now.ToUnixTimeMilliseconds());
-        
+
         return connection;
     }
 
     /// <summary>
-    /// Gets a relay using the given session id. Returns null if no such relay is found.
+    /// Gets a relay using the given app and session id. Returns null if no such relay is found.
     /// </summary>
-    public Connection Get(string sessionId)
+    public Connection Get(string appId, string sessionId)
     {
-        return _connections.GetValueOrDefault(sessionId);
+        return _connections.GetValueOrDefault(GetKey(appId, sessionId));
+    }
+
+    /// <summary>
+    /// Tries to get a relay using the given app and session id. Returns false if no such relay is found.
+    /// </summary>
+    public bool TryGet(string appId, string sessionId, out Connection relay)
+    {
+        return _connections.TryGetValue(GetKey(appId, sessionId), out relay);
     }
 
     /// <summary>
     /// Returns true if the given session id exists among the relays currently active.
     /// </summary>
-    public bool Contains(string sessionId) => _connections.ContainsKey(sessionId);
+    public bool Contains(string appId, string sessionId) => _connections.ContainsKey(GetKey(appId, sessionId));
     
     /// <summary>
     /// Shutdown the manager, and all relays it manages.

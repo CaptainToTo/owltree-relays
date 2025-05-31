@@ -22,36 +22,30 @@ public static class Program
 
         if (args.Length != 5)
         {
-            Console.WriteLine("Usage: dotnet run [ip] [api ip] [matchmaking port] [admin port] [admin password]");
+            Console.WriteLine("Usage: dotnet run [ip] [api ip] [api port]");
             return;
         }
 
         ip = args[0];
         var apiIp = args[1];
         var matchmakingPort = int.Parse(args[2]);
-        var adminPort = int.Parse(args[3]);
-        var password = args[4];
 
         var domain = "http://" + apiIp + ":" + matchmakingPort + "/";
-        var adminDomain = "http://" + apiIp + ":" + adminPort + "/";
 
         Console.WriteLine("matchmaking endpoint listening on: " + domain);
-        Console.WriteLine("admin endpoint listening on: " + adminDomain);
 
         if (!Directory.Exists("logs"))
             Directory.CreateDirectory("logs");
 
-        var endpoint = new MatchmakingEndpoint(domain, MatchmakingRequestCallbacks.HandleRequest);
-        var admin = new AdminEndpoint(adminDomain, password);
-        admin.OnSessionListRequest = AdminRequestCallbacks.HandleSessionListRequest;
-        admin.OnSessionDetailsRequest = AdminRequestCallbacks.HandleSessionDetailsRequest;
+        var endpoint = new MatchmakingEndpoint(domain)
+        {
+
+        };
         relays = new RelayManager(100);
 
-        admin.Start();
         endpoint.Start();
         HandleCommands();
         endpoint.Close();
-        admin.Close();
         relays.DisconnectAll();
     }
 
@@ -77,15 +71,15 @@ public static class Program
                     break;
                 case "p":
                 case "players":
-                    if (tokens.Length != 2)
+                    if (tokens.Length != 3)
                     {
-                        Console.WriteLine("a session id must be provided\n");
+                        Console.WriteLine("an app and session id must be provided\n");
                         break;
                     }
-                    var relay = relays!.Get(tokens[1]);
+                    var relay = relays!.Get(tokens[1], tokens[2]);
                     if (relay == null)
                     {
-                        Console.WriteLine("no relay has that session id\n");
+                        Console.WriteLine("no relay has that app and session id\n");
                         break;
                     }
                     Commands.PlayerList(relay);
@@ -95,33 +89,33 @@ public static class Program
                     quit = true;
                     break;
                 case "ping":
-                    if (tokens.Length != 3)
+                    if (tokens.Length != 4)
                     {
-                        Console.WriteLine("a session id and client id must be provided\n");
+                        Console.WriteLine("an app, session, and client id must be provided\n");
                         break;
                     }
-                    relay = relays!.Get(tokens[1]);
+                    relay = relays!.Get(tokens[1], tokens[2]);
                     if (relay == null)
                     {
-                        Console.WriteLine("no relay has that session id\n");
+                        Console.WriteLine("no relay has that app and session id\n");
                         break;
                     }
                     Commands.Ping(tokens[2], relay);
                     break;
                 case "d":
                 case "disconnect":
-                    if (tokens.Length != 3)
+                    if (tokens.Length != 4)
                     {
-                        Console.WriteLine("a session id and client id must be provided\n");
+                        Console.WriteLine("an app, session, and client id must be provided\n");
                         break;
                     }
-                    relay = relays!.Get(tokens[1]);
+                    relay = relays!.Get(tokens[1], tokens[2]);
                     if (relay == null)
                     {
-                        Console.WriteLine("no relay has that session id\n");
+                        Console.WriteLine("no relay has that app and session id\n");
                         break;
                     }
-                    Commands.Disconnect(tokens[2], relays!.Get(tokens[1])!);
+                    Commands.Disconnect(tokens[2], relay);
                     break;
                 case "h":
                 case "help":

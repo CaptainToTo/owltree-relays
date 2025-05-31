@@ -54,6 +54,8 @@ namespace OwlTree.Matchmaking
         public string serverAddr { get; set; }
         public int tcpPort { get; set; }
         public int udpPort { get; set; }
+        public int maxClients { get; set; }
+        public bool migratable { get; set; }
         public SimulationSystem simulationSystem { get; set; }
         public int tickRate { get; set; }
     }
