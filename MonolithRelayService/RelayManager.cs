@@ -63,7 +63,7 @@ public class RelayManager
         List<string> toBeRemoved = new();
         while (IsActive)
         {
-            long start = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
+            long start = Timestamp.Now;
             foreach (var pair in _connections)
             {
                 pair.Value.ExecuteQueue();
@@ -89,7 +89,7 @@ public class RelayManager
                 _startTimes.Remove(sessionId, out var time);
             }
             toBeRemoved.Clear();
-            long diff = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - start;
+            long diff = Timestamp.Now - start;
 
             Thread.Sleep(Math.Max(0, _threadUpdateDelta - (int)diff));
         }
@@ -127,7 +127,7 @@ public class RelayManager
             connection.Disconnect();
             throw new InvalidOperationException("Failed to cache new connection.");
         }
-        _startTimes.TryAdd(args.sessionId, DateTimeOffset.Now.ToUnixTimeMilliseconds());
+        _startTimes.TryAdd(args.sessionId, Timestamp.Now);
 
         return connection;
     }

@@ -5,6 +5,8 @@ using OwlTree.Matchmaking;
 
 public static class Program
 {
+    public static bool active = true;
+
     public static void Main(string[] args)
     {
         if (!Directory.Exists("logs"))
@@ -19,6 +21,9 @@ public static class Program
             Console.WriteLine("Matchmaking Usage: dotnet run [appId] [endpoint] [client/host] [sessionId]");
             Console.WriteLine("Direct Connect Usage: dotnet run [appId] [sessionId] [ip address] [tcp] [udp]");
         }
+
+        while (active)
+            Thread.Sleep(100);
     }
 
     private static void DirectConnect(string[] args)
@@ -28,7 +33,8 @@ public static class Program
         var logFile = $"logs/client{logId}.log";
         Console.WriteLine("client log id: " + logId.ToString());
 
-        var client = new Connection(new Connection.Args{
+        var client = new Connection(new Connection.Args
+        {
             role = NetRole.Client,
             serverAddr = args[2],
             tcpPort = int.Parse(args[3]),
@@ -39,28 +45,33 @@ public static class Program
             verbosity = Logger.Includes().All()
         });
 
-        client.OnReady += (id) => {
+        client.OnReady += (id) =>
+        {
             if (client.IsHost)
                 Console.WriteLine("assigned as host");
             Console.WriteLine("assigned client id: " + id.ToString());
         };
 
-        client.OnClientConnected += (id) => {
+        client.OnClientConnected += (id) =>
+        {
             Console.WriteLine($"client {id} connected");
         };
 
-        client.OnClientDisconnected += (id) => {
+        client.OnClientDisconnected += (id) =>
+        {
             Console.WriteLine($"client {id} disconnected");
         };
 
-        client.OnHostMigration += (id) => {
+        client.OnHostMigration += (id) =>
+        {
             if (client.IsHost)
                 Console.WriteLine("you are now the host");
             else
                 Console.WriteLine($"client {id} assigned as new host");
         };
 
-        client.OnLocalDisconnect += (id) => {
+        client.OnLocalDisconnect += (id) =>
+        {
             Console.WriteLine("disconnected");
         };
 
@@ -71,6 +82,8 @@ public static class Program
         }
 
         client.Disconnect();
+
+        active = false;
     }
 
     private static async void UseMatchmaking(string[] args)
@@ -149,28 +162,33 @@ public static class Program
             });
         }
 
-        client.OnReady += (id) => {
+        client.OnReady += (id) =>
+        {
             if (client.IsHost)
                 Console.WriteLine("assigned as host");
             Console.WriteLine("assigned client id: " + id.ToString());
         };
 
-        client.OnClientConnected += (id) => {
+        client.OnClientConnected += (id) =>
+        {
             Console.WriteLine($"client {id} connected");
         };
 
-        client.OnClientDisconnected += (id) => {
+        client.OnClientDisconnected += (id) =>
+        {
             Console.WriteLine($"client {id} disconnected");
         };
 
-        client.OnHostMigration += (id) => {
+        client.OnHostMigration += (id) =>
+        {
             if (client.IsHost)
                 Console.WriteLine("you are now the host");
             else
                 Console.WriteLine($"client {id} assigned as new host");
         };
 
-        client.OnLocalDisconnect += (id) => {
+        client.OnLocalDisconnect += (id) =>
+        {
             Console.WriteLine("disconnected");
         };
 
@@ -181,5 +199,7 @@ public static class Program
         }
 
         client.Disconnect();
+
+        active = false;
     }
 }

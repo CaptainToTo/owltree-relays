@@ -35,14 +35,14 @@ namespace OwlTree.Matchmaking
         RequestRejected = 411
     }
 
-    public abstract class HttpRequest<T>
+    public abstract class HttpRequest<T> where T : HttpRequest<T>
     {
         public Dictionary<string, string> args { get; set; }
 
         /// <summary>
         /// Serializes the request to a JSON string.
         /// </summary>
-        public string Serialize() => JsonSerializer.Serialize(this);
+        public string Serialize() => JsonSerializer.Serialize((T)this);
 
         /// <summary>
         /// Deserializes a request from a JSON string.
@@ -73,7 +73,7 @@ namespace OwlTree.Matchmaking
         /// <summary>
         /// Serializes the response to a JSON string.
         /// </summary>
-        public string Serialize() => JsonSerializer.Serialize(this);
+        public string Serialize() => JsonSerializer.Serialize((T)this);
 
         /// <summary>
         /// Deserializes a response from a JSON string.

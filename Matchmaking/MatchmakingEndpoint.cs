@@ -34,20 +34,44 @@ namespace OwlTree.Matchmaking
         /// <summary>
         /// Create a new matchmaking endpoint that will listen to the given domain.
         /// </summary>
-        public MatchmakingEndpoint(string domain)
+        public MatchmakingEndpoint(
+            string domain,
+            ProcessCreationRequest createSession = null,
+            ProcessPublishRequest publishSession = null,
+            ProcessSessionRequest getSession = null,
+            ProcessMatchmakingRequest getTicket = null,
+            ProcessTicketRequest getTicketStatus = null
+        )
         {
             _listener = new HttpListener();
             _listener.Prefixes.Add(domain);
+            this.createSession = createSession;
+            this.publishSession = publishSession;
+            this.getSession = getSession;
+            this.getTicket = getTicket;
+            this.getTicketStatus = getTicketStatus;
         }
 
         /// <summary>
         /// Create a new matchmaking endpoint that will listen to the given domains.
         /// </summary>
-        public MatchmakingEndpoint(IEnumerable<string> domains)
+        public MatchmakingEndpoint(
+            IEnumerable<string> domains,
+            ProcessCreationRequest createSession = null,
+            ProcessPublishRequest publishSession = null,
+            ProcessSessionRequest getSession = null,
+            ProcessMatchmakingRequest getTicket = null,
+            ProcessTicketRequest getTicketStatus = null
+        )
         {
             _listener = new HttpListener();
             foreach (var domain in domains)
                 _listener.Prefixes.Add(domain);
+            this.createSession = createSession;
+            this.publishSession = publishSession;
+            this.getSession = getSession;
+            this.getTicket = getTicket;
+            this.getTicketStatus = getTicketStatus;
         }
 
         /// <summary>

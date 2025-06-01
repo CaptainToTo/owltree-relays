@@ -20,7 +20,7 @@ public static class Program
     public static void Main(string[] args)
     {
 
-        if (args.Length != 5)
+        if (args.Length != 3)
         {
             Console.WriteLine("Usage: dotnet run [ip] [api ip] [api port]");
             return;
@@ -37,11 +37,15 @@ public static class Program
         if (!Directory.Exists("logs"))
             Directory.CreateDirectory("logs");
 
-        var endpoint = new MatchmakingEndpoint(domain)
-        {
-
-        };
-        relays = new RelayManager(100);
+        var endpoint = new MatchmakingEndpoint(
+            domain,
+            createSession: MatchmakingCallbacks.CreateSession,
+            publishSession: MatchmakingCallbacks.PublishSession,
+            getSession: MatchmakingCallbacks.GetSession,
+            getTicket: MatchmakingCallbacks.GetTicket,
+            getTicketStatus: MatchmakingCallbacks.GetTicketStatus
+        );
+        relays = new RelayManager(50);
 
         endpoint.Start();
         HandleCommands();
@@ -104,11 +108,23 @@ public static class Program
                     break;
                 case "d":
                 case "disconnect":
-                    if (tokens.Length != 4)
+                    if (tokens.Length == 3)
                     {
-                        Console.WriteLine("an app, session, and client id must be provided\n");
+                        relay = relays!.Get(tokens[1], tokens[2]);
+                        if (relay == null)
+                        {
+                            Console.WriteLine("no relay has that app and session id\n");
+                            break;
+                        }
+                        Commands.Disconnect(relay);
                         break;
                     }
+
+                    if (tokens.Length != 4)
+                        {
+                            Console.WriteLine("an app, session, and client id must be provided\n");
+                            break;
+                        }
                     relay = relays!.Get(tokens[1], tokens[2]);
                     if (relay == null)
                     {

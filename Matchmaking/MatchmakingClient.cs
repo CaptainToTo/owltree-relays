@@ -1,3 +1,4 @@
+using System;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,7 +31,7 @@ namespace OwlTree.Matchmaking
         /// </summary>
         public async Task<SessionCreationResponse> CreateSession(SessionCreationRequest request)
         {
-            return await SendRequest<SessionCreationRequest, SessionCreationResponse>(request, Uris.CreateSession);
+            return await SendRequest<SessionCreationResponse>(request.Serialize(), Uris.CreateSession);
         }
 
         /// <summary>
@@ -38,7 +39,7 @@ namespace OwlTree.Matchmaking
         /// </summary>
         public async Task<SessionPublishResponse> PublishSession(SessionPublishRequest request)
         {
-            return await SendRequest<SessionPublishRequest, SessionPublishResponse>(request, Uris.PublishSession);
+            return await SendRequest<SessionPublishResponse>(request.Serialize(), Uris.PublishSession);
         }
 
         /// <summary>
@@ -46,7 +47,7 @@ namespace OwlTree.Matchmaking
         /// </summary>
         public async Task<SessionDataResponse> GetSession(SessionDataRequest request)
         {
-            return await SendRequest<SessionDataRequest, SessionDataResponse>(request, Uris.SessionData);
+            return await SendRequest<SessionDataResponse>(request.Serialize(), Uris.SessionData);
         }
 
         /// <summary>
@@ -54,7 +55,7 @@ namespace OwlTree.Matchmaking
         /// </summary>
         public async Task<MatchmakingTicketResponse> GetTicket(MatchmakingTicketRequest request)
         {
-            return await SendRequest<MatchmakingTicketRequest, MatchmakingTicketResponse>(request, Uris.GetTicket);
+            return await SendRequest<MatchmakingTicketResponse>(request.Serialize(), Uris.GetTicket);
         }
 
         /// <summary>
@@ -62,15 +63,14 @@ namespace OwlTree.Matchmaking
         /// </summary>
         public async Task<TicketStatusResponse> GetTicketStatus(TicketStatusRequest request)
         {
-            return await SendRequest<TicketStatusRequest, TicketStatusResponse>(request, Uris.TicketStatus);
+            return await SendRequest<TicketStatusResponse>(request.Serialize(), Uris.TicketStatus);
         }
 
-        private async Task<B> SendRequest<A, B>(A request, string uri) where A : HttpRequest<A> where B : HttpResponse<B>, new()
+        private async Task<B> SendRequest<B>(string request, string uri) where B : HttpResponse<B>, new()
         {
             try
             {
-                var requestStr = request.Serialize();
-                var content = new StringContent(requestStr, Encoding.UTF8, "application/json");
+                var content = new StringContent(request, Encoding.UTF8, "application/json");
 
                 var response = await _client.PostAsync(EndpointUrl + uri, content);
 

@@ -9,9 +9,10 @@ public static class Commands
         Console.WriteLine("  (h)elp:    prints this command list");
         Console.WriteLine("  (r)elays:  prints a list of relay servers currently running");
         Console.WriteLine("  (q)uit:    shutdown the relay server");
-        Console.WriteLine("  (p)layers [session id]: prints a list of players currently on the server");
-        Console.WriteLine("  ping [session id] [client id]: ping a client to test their latency");
-        Console.WriteLine("  (d)isconnect [session id] [client id]: disconnect a client from the server");
+        Console.WriteLine("  (p)layers [app id] [session id]: prints a list of players currently on the server");
+        Console.WriteLine("  ping [app id] [session id] [client id]: ping a client to test their latency");
+        Console.WriteLine("  (d)isconnect [app id] [session id]: shutdown a session, disconnecting all of its clients");
+        Console.WriteLine("  (d)isconnect [app id] [session id] [client id]: disconnect a client from the server");
     }
 
     public static void PlayerList(Connection relay)
@@ -63,6 +64,12 @@ public static class Commands
         }
     }
 
+    public static void Disconnect(Connection relay)
+    {
+        relay.Disconnect();
+        Console.WriteLine("shutting down relay...");
+    }
+
     public static void Disconnect(string id, Connection relay)
     {
         if (!uint.TryParse(id, out var result))
@@ -84,8 +91,15 @@ public static class Commands
     internal static void RelayList(RelayManager relays)
     {
         if (relays == null) return;
+
+        if (relays.Count == 0)
+        {
+            Console.WriteLine("No active relays");
+            return;
+        }
+
         Console.WriteLine("Relays:");
         foreach (var relay in relays.Connections)
-            Console.WriteLine($"   {(relay.IsRelay ? "relay" : "server")} {relay.SessionId} ({relay.AppId}): TCP: {relay.ServerTcpPort}, UDP: {relay.ServerUdpPort}, {relay.ClientCount}/{relay.MaxClients} clients");
+            Console.WriteLine($"   {relay.AppId.Id} - {relay.SessionId.Id}: TCP: {relay.ServerTcpPort}, UDP: {relay.ServerUdpPort}, {relay.ClientCount}/{relay.MaxClients} clients");
     }
 }
