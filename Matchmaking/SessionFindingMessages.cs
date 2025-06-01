@@ -72,16 +72,17 @@ namespace OwlTree.Matchmaking
         public string hostAddr { get; set; }
         public int tcpPort { get; set; }
         public int udpPort { get; set; }
+        public SimulationSystem simulationSystem { get; set; }
+        public int tickRate { get; set; }
     }
 
     /// <summary>
     /// If host's publishing request was successful, will contain
     /// the endpoint the host was assign for reporting session events
-    /// to the server. Use to create a new SessionReporter.
+    /// to the server.
     /// </summary>
     public class SessionPublishResponse : HttpResponse<SessionPublishResponse>
     {
-        public string reportingIp { get; set; }
-        public int reportingPort { get; set; }
+        public string reportingEndpoint { get; set; }
     }
 }
