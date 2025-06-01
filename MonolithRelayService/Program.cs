@@ -104,7 +104,7 @@ public static class Program
                         Console.WriteLine("no relay has that app and session id\n");
                         break;
                     }
-                    Commands.Ping(tokens[2], relay);
+                    Commands.Ping(tokens[3], relay);
                     break;
                 case "d":
                 case "disconnect":
@@ -131,7 +131,7 @@ public static class Program
                         Console.WriteLine("no relay has that app and session id\n");
                         break;
                     }
-                    Commands.Disconnect(tokens[2], relay);
+                    Commands.Disconnect(tokens[3], relay);
                     break;
                 case "h":
                 case "help":
