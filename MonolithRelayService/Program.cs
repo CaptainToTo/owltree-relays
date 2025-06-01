@@ -19,7 +19,6 @@ public static class Program
 
     public static void Main(string[] args)
     {
-
         if (args.Length != 3)
         {
             Console.WriteLine("Usage: dotnet run [ip] [api ip] [api port]");
@@ -39,16 +38,19 @@ public static class Program
 
         var endpoint = new MatchmakingEndpoint(
             domain,
+            // callbacks to handle http request
             createSession: MatchmakingCallbacks.CreateSession,
-            publishSession: MatchmakingCallbacks.PublishSession,
             getSession: MatchmakingCallbacks.GetSession,
+
+            // not used in simple relay service
+            publishSession: MatchmakingCallbacks.PublishSession,
             getTicket: MatchmakingCallbacks.GetTicket,
             getTicketStatus: MatchmakingCallbacks.GetTicketStatus
         );
-        relays = new RelayManager(50);
+        relays = new RelayManager(50); // relay manager runs connections in separate thread
 
-        endpoint.Start();
-        HandleCommands();
+        endpoint.Start(); // endpoint starts its own async task
+        HandleCommands(); // cli in main thread
         endpoint.Close();
         relays.DisconnectAll();
     }
