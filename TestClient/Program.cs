@@ -166,7 +166,7 @@ public static class Program
                 Environment.Exit(0);
             }
 
-            reporter = new HostReporter(response.reportingEndpoint, client.AppId.Id, client.SessionId.Id, 1000);
+            reporter = new HostReporter(response.reportingEndpoint, client.AppId.Id, client.SessionId.Id, 10000);
 
             for (int i = 0; i < 10; i++)
             {
