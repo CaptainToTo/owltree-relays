@@ -18,7 +18,7 @@ public static class Program
             DirectConnect(args);
         else
         {
-            Console.WriteLine("Matchmaking Usage: dotnet run [appId] [endpoint] [client/host] [sessionId]");
+            Console.WriteLine("Matchmaking Usage: dotnet run [appId] [endpoint] [client/host/pub] [sessionId]");
             Console.WriteLine("Direct Connect Usage: dotnet run [appId] [sessionId] [ip address] [tcp] [udp]");
         }
 
@@ -96,6 +96,7 @@ public static class Program
         var apiClient = new MatchmakingClient(args[1]);
 
         Connection client = null;
+        HostReporter reporter = null;
 
         if (args[2] == "host")
         {
@@ -131,6 +132,60 @@ public static class Program
                 verbosity = Logger.Includes().All()
             });
         }
+        else if (args[2] == "pub")
+        {
+            client = new Connection(new Connection.Args
+            {
+                role = NetRole.Server,
+                serverAddr = "0.0.0.0",
+                tcpPort = 0,
+                udpPort = 0,
+                appId = args[0],
+                sessionId = logId.ToString(),
+                maxClients = 6,
+                simulationSystem = SimulationSystem.None,
+                simulationTickRate = 20,
+                logger = (str) => File.AppendAllText(logFile, str),
+                verbosity = Logger.Includes().All()
+            });
+
+            var response = await apiClient.PublishSession(new SessionPublishRequest
+            {
+                appId = client.AppId.Id,
+                sessionId = client.SessionId.Id,
+                maxPlayers = client.MaxClients,
+                tcpPort = client.ServerTcpPort,
+                udpPort = client.ServerUdpPort,
+                simulationSystem = client.SimulationSystem,
+                tickRate = client.TickRate
+            });
+
+            if (response.RequestFailed)
+            {
+                Console.WriteLine("failed to publish session");
+                Environment.Exit(0);
+            }
+
+            reporter = new HostReporter(response.reportingEndpoint, client.AppId.Id, client.SessionId.Id, 1000);
+
+            for (int i = 0; i < 10; i++)
+            {
+                await reporter.Connect();
+                if (reporter.Connected)
+                    break;
+            }
+
+            if (!reporter.Connected)
+            {
+                Console.WriteLine("failed to connect to host reporting endpoint");
+                Environment.Exit(0);
+            }
+
+            client.OnClientConnected += (id) => reporter.ReportClientCount(client.ClientCount);
+            client.OnClientDisconnected += (id) => reporter.ReportClientCount(client.ClientCount);
+
+            client.OnLocalDisconnect += (id) => reporter.ReportShutdown();
+        }
         else
         {
             var response = await apiClient.GetSession(new SessionDataRequest
@@ -141,7 +196,7 @@ public static class Program
 
             if (response.RequestFailed)
             {
-                Console.WriteLine("failed to request relay server");
+                Console.WriteLine("failed to request server");
                 Environment.Exit(0);
             }
 
@@ -195,6 +250,10 @@ public static class Program
         while (client.IsActive)
         {
             client.ExecuteQueue();
+
+            if (reporter != null && reporter.TimeForPing)
+                reporter.Ping();
+
             Thread.Sleep(client.TickRate);
         }
 

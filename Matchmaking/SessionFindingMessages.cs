@@ -69,7 +69,7 @@ namespace OwlTree.Matchmaking
         public string appId { get; set; }
         public string sessionId { get; set; }
         public int maxPlayers { get; set; }
-        public string hostAddr { get; set; }
+        public string hostAddr { get; set; } = "*";
         public int tcpPort { get; set; }
         public int udpPort { get; set; }
         public SimulationSystem simulationSystem { get; set; }

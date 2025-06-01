@@ -99,6 +99,7 @@ public class SessionStore
     public static string GetKey(string appId, string sessionId) => appId + "+" + sessionId;
 
     public readonly string reportingDomain;
+    public readonly string reportingRemote;
     private HttpListener _endpoint;
     private Thread _thread;
 
@@ -107,13 +108,14 @@ public class SessionStore
     private int _clearRate;
     private int _dropThreshold;
 
-    public SessionStore(string reportDomain, int clearRate, int dropThreshold)
+    public SessionStore(string reportDomain, string reportRemote, int clearRate, int dropThreshold)
     {
         _clearRate = clearRate;
         _dropThreshold = dropThreshold;
 
         _endpoint = new HttpListener();
         reportingDomain = reportDomain;
+        reportingRemote = reportRemote;
         _endpoint.Prefixes.Add(reportDomain);
         _thread = new Thread(ThreadLoop);
         _thread.Start();
@@ -136,16 +138,16 @@ public class SessionStore
 
                 switch (uri)
                 {
-                    case HostReportUris.HostConnected:
+                    case Uris.HostConnected:
                         response.StatusCode = (int)HandleHostConnected(request);
                         break;
-                    case HostReportUris.ClientCount:
+                    case Uris.ClientCount:
                         response.StatusCode = (int)HandleClientCount(request);
                         break;
-                    case HostReportUris.Shutdown:
+                    case Uris.Shutdown:
                         response.StatusCode = (int)HandleShutdown(request);
                         break;
-                    case HostReportUris.HostPing:
+                    case Uris.HostPing:
                         response.StatusCode = (int)HandlePing(request);
                         break;
                     default:
@@ -245,13 +247,17 @@ public class SessionStore
             foreach (var pair in _sessions)
             {
                 if (pair.Value.HostConnected && start - pair.Value.LastContact > _dropThreshold)
+                {
                     toBeRemoved.Add(pair.Key);
+                }
                 else if (!pair.Value.HostConnected && start - pair.Value.startTime > _dropThreshold)
                     toBeRemoved.Add(pair.Key);
             }
 
             foreach (var key in toBeRemoved)
+            {
                 _sessions.Remove(key);
+            }
             toBeRemoved.Clear();
             long diff = Timestamp.Now - start;
 
@@ -278,7 +284,7 @@ public class SessionStore
 
     public bool TryGet(string appId, string sessionId, out SessionData data)
     {
-        if (_sessions.ContainsKey(GetKey(appId, sessionId)))
+        if (!_sessions.ContainsKey(GetKey(appId, sessionId)))
         {
             data = null;
             return false;

@@ -30,11 +30,11 @@ public static class Commands
 
         if (sessions.Count == 0)
         {
-            Console.WriteLine("No active relays");
+            Console.WriteLine("No active sessions");
             return;
         }
 
-        Console.WriteLine("Relays:");
+        Console.WriteLine("Sessions:");
         foreach (var session in sessions.Sessions)
             Console.WriteLine($"   {session.appId} - {session.sessionId}: IP: {session.ip}, TCP: {session.tcpPort}, UDP: {session.udpPort}, {session.ClientCount}/{session.maxClients} clients");
     }

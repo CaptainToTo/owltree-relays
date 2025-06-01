@@ -161,6 +161,8 @@ namespace OwlTree.Matchmaking
         {
             var source = GetSource(request);
             var requestObj = Deserialize<SessionPublishRequest>(request);
+            if (requestObj.hostAddr == "*")
+                requestObj.hostAddr = source.ToString();
             return await publishSession.Invoke(source, requestObj);
         }
 

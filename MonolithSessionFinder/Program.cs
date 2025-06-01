@@ -6,24 +6,23 @@ using OwlTree.Matchmaking;
 public static class Program
 {
     public static SessionStore sessions;
-    public static string ip = "*";
 
     public static void Main(string[] args)
     {
-        if (args.Length != 3)
+        if (args.Length != 5)
         {
-            Console.WriteLine("Usage: dotnet run [ip] [api endpoint] [reporting endpoint] [clear rate] [drop threshold]");
+            Console.WriteLine("Usage: dotnet run [api endpoint] [reporting local] [reporting remote] [clear rate] [drop threshold]");
             return;
         }
 
-        ip = args[0];
-        var apiEndpoint = args[1];
-        var reportingEndpoint = args[2];
+        var apiEndpoint = args[0];
+        var reportingLocal = args[1];
+        var reportingRemote = args[2];
         var clearRate = int.Parse(args[3]);
         var dropThreshold = int.Parse(args[4]);
 
         Console.WriteLine("matchmaking endpoint listening on: " + apiEndpoint);
-        Console.WriteLine("host reporting endpoint listening on: " + reportingEndpoint);
+        Console.WriteLine("host reporting endpoint listening on: " + reportingLocal);
 
         if (!Directory.Exists("logs"))
             Directory.CreateDirectory("logs");
@@ -39,7 +38,7 @@ public static class Program
             getTicket: MatchmakingCallbacks.GetTicket,
             getTicketStatus: MatchmakingCallbacks.GetTicketStatus
         );
-        sessions = new SessionStore(reportingEndpoint, clearRate, dropThreshold);
+        sessions = new SessionStore(reportingLocal, reportingRemote, clearRate, dropThreshold);
 
         endpoint.Start(); // endpoint starts its own async task
         HandleCommands(); // cli in main thread

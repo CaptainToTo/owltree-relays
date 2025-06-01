@@ -27,7 +27,8 @@ public static class MatchmakingCallbacks
 
         return new SessionPublishResponse
         {
-            reportingEndpoint = sessions.reportingDomain
+            responseCode = ResponseCodes.RequestAccepted,
+            reportingEndpoint = sessions.reportingRemote
         };
     }
 
@@ -39,12 +40,13 @@ public static class MatchmakingCallbacks
         if (sessions == null)
             return SessionDataResponse.RequestRejected;
 
-        if (sessions.TryGet(request.appId, request.sessionId, out var data))
+
+        if (sessions.TryGet(request.appId, request.sessionId, out var data) && data.HostConnected)
         {
             return new SessionDataResponse
             {
                 responseCode = ResponseCodes.RequestAccepted,
-                serverAddr = Program.ip,
+                serverAddr = data.ip,
                 tcpPort = data.tcpPort,
                 udpPort = data.udpPort,
                 maxClients = data.maxClients,
