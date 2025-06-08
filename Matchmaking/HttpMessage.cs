@@ -59,6 +59,8 @@ namespace OwlTree.Matchmaking
     {
         public ResponseCodes responseCode { get; set; }
 
+        public Dictionary<string, string> args { get; set; }
+
         /// <summary>
         /// Returns true if the response has a successful response code.
         /// </summary>
